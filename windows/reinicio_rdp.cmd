@@ -3,7 +3,7 @@ REM del registro que cuenta esos días y lo vuelve a 0, HAY QUE REINICIAR EL SER
 REM como el script esta pensado para que se ejecute automaticamente no muestro mensajer por consola
 
 REM Lo primero es borrar la entrada en el registro
-reg delete "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod" /v *
+reg delete "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod" /f
 
 REM Ahora fuerzo el reinicio del servidor
 shutdown /r /f
