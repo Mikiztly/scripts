@@ -5,13 +5,13 @@
 # Lo que hace es leer de 2 archivos csv los datos que se necesitan para crear los backups:
 # db_server.csv (datos para la conexion al servidor mysql): se cargan los datos de la siguiente manera: nombre del host, usuario, contraseña, nombre de la DB
 # mk_nbc.csv (datos para hacer la copia del backup): se cargan los datos de la siguiente manera: IP del equipo, contraseña, nombre, usuario, cliente, puerto, directorio del backup
-# IMPORTANTE: los archivos csv tienen como separador de campo la coma (,)
+# IMPORTANTE: los archivos csv tienen como separador de campo la coma (,) SIN ESPACIOS
 # Para ejecutar el script se deben pasar 2 argumentos: primero el archivo csv donde estan los datos de mysql y segunto el archivo csv que tiene los datos de los equipos a realizar el backup
 
 # Verificamos que los archivos existan
 if [ ! -f "$1" ] || [ ! -f "$2" ]; then
   echo "Error: Alguno de los archivos de configuracion no existe"
-  echo "Se debe pasar como argumento: $0 <server_mysql.csv> <equipos.csv>"
+  echo "Se debe pasar como argumento: $0 <server_mysql.txt> <equipos.csv>"
   exit 1
 fi
 
@@ -26,7 +26,6 @@ IFS=, read -r db_host db_user db_pass db_name < "$1"
 
 # Abrimos el archivo para recorrer los registros y guardarlos en las variables
 while IFS=, read -r thename therouter theport theuser thepassword theclient theroute; do
-  echo "-------------------"
   echo "Router: ${therouter}" # IP del equipo
   echo "Password: ${thepassword}" # Contraseña
   echo "Nombre: ${thename}" # Nombre de router MK
@@ -36,24 +35,22 @@ while IFS=, read -r thename therouter theport theuser thepassword theclient ther
   # Se crea la ruta completa para guardar el backup, con $PWD llego al directorio donse se ejecuta el script, por ejemolo: home/usuario/backups
   theroute_a="${PWD}/${theroute}/${thename}/" # Ruta completa donde se descarga el backup
   echo "Ruta: ${theroute_a}"  # Ruta donde se descarga el BK
+  echo "-------------------"
 
   # Chequeamos que exista el directorio
-  if ! [ -d "$theroute_a" ]; then
+  if [[ ! -d "$theroute_a" ]]; then
     echo
     # Si no existe el directorio lo creamos
     echo "Creando el directorio ${theroute_a}"
     mkdir -p "$theroute_a"
-    # chown -R strongsystems:backups "$theroute_a"
-    chown -R dcasavilla:dcasavilla "$theroute_a"
-    chmod -R 754 "$theroute_a"
   fi
 
   # Realizamos la copia de seguridad
   echo
   echo "Copia de seguridad"
   NOW=$(date +%Y-%m-%d_%H%M%S)
-  archivo="${theroute_a}/backup-${NOW}.bkp"
-  touch $archivo
+  archivo="${theroute_a}backup-${NOW}.bkp"
+  touch "$archivo"
   
 #  thefile=$(sshpass -p $thepassword ssh -o ConnectTimeout=10 $theuser@$therouter -p $theport ':local filename ([/system identity get name] . "-" . [:pick [/system clock get date] 7 11] . [:pick [/system clock get date] 0 3] . [:pick [/system clock get date] 4 6] . "-" . [:pick [/system clock get time] 0 2] . [:pick [/system clock get time] 3 5]); /export terse file=$filename; /system backup save dont-encrypt=yes name=($filename); put $filename' | tail -n 1 | tr -d '\r');
 #  sshpass -p $thepassword scp -P $theport -o ConnectTimeout=5 $theuser@$therouter:/"$thefile.backup" $theroute_a &&
@@ -67,9 +64,9 @@ while IFS=, read -r thename therouter theport theuser thepassword theclient ther
 #  fi
 
   # Permisos Directorios y archivos
-  chmod -R 754 $theroute_a
+  chmod -R 754 "$theroute_a"
   #chown -R :backups $theroute_a
-  chown -R :dcasavilla $theroute_a
+  chown -R :dcasavilla "$theroute_a"
 
   # Conectarse a la base de datos y ejecutar una consulta SQL para insertar los datos
 #  mysql -h $db_host -u $db_user -p $db_pass $db_name << EOF
